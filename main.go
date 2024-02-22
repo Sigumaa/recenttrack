@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -11,7 +12,19 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	if os.Getenv("LASTFM_API_KEY") == "" && os.Getenv("LASTFM_USER_NAME") == "" {
+		log.Println("No Last.fm API key or user name found in .env file")
+		os.Exit(1)
+	}
+}
 
 func main() {
 	r := chi.NewRouter()
@@ -34,7 +47,8 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, world!"))
+		// hello! LASTFM_USER_NAME
+		w.Write([]byte("hello! " + os.Getenv("LASTFM_USER_NAME")))
 	})
 
 	srv := &http.Server{
