@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Sigumaa/recenttrack/adapter"
+	"github.com/Sigumaa/recenttrack/controller"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -21,15 +23,15 @@ func init() {
 		log.Println("No .env file found")
 	}
 
-	if os.Getenv("LASTFM_API_KEY") == "" && os.Getenv("LASTFM_USER_NAME") == "" {
-		log.Println("No Last.fm API key or user name found in .env file")
+	if os.Getenv("LASTFM_API_KEY") == "" {
+		log.Println("No LASTFM_API_KEY found")
 		os.Exit(1)
 	}
 }
 
 func main() {
 	r := chi.NewRouter()
-	_ = do.New()
+	injector := do.New()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -52,6 +54,12 @@ func main() {
 		// hello! LASTFM_USER_NAME
 		w.Write([]byte("hello! " + os.Getenv("LASTFM_USER_NAME")))
 	})
+
+	do.Provide(injector, adapter.NewRecentTracks)
+	do.Provide(injector, controller.NewRecentTrackController)
+
+	RecentTrackController := do.MustInvoke[controller.RecentTrackController](injector)
+	RecentTrackController.RegisterEndpoints(r)
 
 	srv := &http.Server{
 		Addr:    ":3333",
