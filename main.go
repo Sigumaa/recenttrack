@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	"github.com/samber/do"
 )
 
 func init() {
@@ -28,6 +29,7 @@ func init() {
 
 func main() {
 	r := chi.NewRouter()
+	_ = do.New()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
